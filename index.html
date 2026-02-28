@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokemon Team Builder</title>
+</head>
+<body>
+
+    <h1>Pokemon Team Builder</h1>
+
+    <input type="text" id="pokemonInput" placeholder="Enter Pokemon name or ID">
+    <button id="submitBtn">Submit</button>
+
+    <div id="pokemonDisplay"></div>
+
+    <div id="moveSelection" style="display:none;">
+        <h3>Select 4 Moves</h3>
+        <select id="move1"></select>
+        <select id="move2"></select>
+        <select id="move3"></select>
+        <select id="move4"></select>
+        <br><br>
+        <button id="addToTeam">Add to Team</button>
+    </div>
+
+    <h2>Your Team</h2>
+    <div id="team"></div>
+
+<script>
+
+const cache = {}; // simple caching object
+let currentPokemon = null;
+
+document.getElementById("submitBtn").addEventListener("click", fetchPokemon);
+document.getElementById("addToTeam").addEventListener("click", addToTeam);
+
+function fetchPokemon() {
+    const input = document.getElementById("pokemonInput").value.toLowerCase();
+
+    if (!input) return;
+
+    if (cache[input]) {
+        displayPokemon(cache[input]);
+        return;
+    }
+
+    fetch(`https://pokeapi.co/api/v2/pokemon/${input}`)
+        .then(response => response.json())
+        .then(data => {
+            cache[input] = data; // store in cache
+            displayPokemon(data);
+        })
+        .catch(error => {
+            alert("Pokemon not found!");
+        });
+}
+
+function displayPokemon(data) {
+    currentPokemon = data;
+
+    const display = document.getElementById("pokemonDisplay");
+    display.innerHTML = "";
+
+    // Image
+    const img = document.createElement("img");
+    img.src = data.sprites.front_default;
+    display.appendChild(img);
+
+    // Audio
+    if (data.cries && data.cries.latest) {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = data.cries.latest;
+        display.appendChild(audio);
+    }
+
+    // Load moves into dropdowns
+    const moves = data.moves;
+
+    for (let i = 1; i <= 4; i++) {
+        const dropdown = document.getElementById(`move${i}`);
+        dropdown.innerHTML = "";
+
+        moves.slice(0, 20).forEach(move => {
+            const option = document.createElement("option");
+            option.value = move.move.name;
+            option.textContent = move.move.name;
+            dropdown.appendChild(option);
+        });
+    }
+
+    document.getElementById("moveSelection").style.display = "block";
+}
+
+function addToTeam() {
+    if (!currentPokemon) return;
+
+    const teamDiv = document.getElementById("team");
+
+    const card = document.createElement("div");
+    card.style.border = "1px solid black";
+    card.style.margin = "10px";
+    card.style.padding = "10px";
+
+    const title = document.createElement("h3");
+    title.textContent = currentPokemon.name;
+    card.appendChild(title);
+
+    const img = document.createElement("img");
+    img.src = currentPokemon.sprites.front_default;
+    card.appendChild(img);
+
+    const moveList = document.createElement("ul");
+
+    for (let i = 1; i <= 4; i++) {
+        const li = document.createElement("li");
+        li.textContent = document.getElementById(`move${i}`).value;
+        moveList.appendChild(li);
+    }
+
+    card.appendChild(moveList);
+
+    teamDiv.appendChild(card);
+}
+
+</script>
+
+</body>
+</html>
