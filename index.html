@@ -2,104 +2,171 @@
 <html>
 <head>
     <title>Pokemon Team Builder</title>
+
+    <style>
+        /* Styling for the page */
+        body {
+            background-color: #8fb3bf;
+            font-family: serif;
+        }
+
+        /* Main Content */
+        .container {
+            width: 700px;
+            margin: 40px auto;
+            background-color: white;
+            border: 8px solid #d4a017;
+            border-radius: 40px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        /* Elements */
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        /* Input and Button */
+        input {
+            width: 250px;
+            padding: 5px;
+        }
+
+        button {
+            padding: 5px 12px;
+            margin-top: 10px;
+        }
+
+        /* Pokemon Display */
+        #pokemonImage {
+            width: 250px;
+            margin: 20px 0;
+        }
+
+
+        #moveSelection {
+            margin-top: 20px;
+        }
+        .move-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 40px;
+            justify-content: center;
+            margin: 20px auto;
+            width: 500px;
+        }
+
+        select {
+            width: 200px;
+            padding: 3px;
+        }
+
+        /* Team Display */
+        .team-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            border: 1px solid black;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: white;
+        }
+
+        .team-card img {
+            width: 100px;
+        }
+
+        .team-card ul {
+            text-align: left;
+        }
+
+    </style>
 </head>
 <body>
 
-    <!-- Page title -->
-    <h1>Pokemon Team Builder</h1>
+<div class="container">
 
-    <!-- Input field for Pokemon name or ID -->
-    <input type="text" id="pokemonInput" placeholder="Enter Pokemon name or ID">
-    <button id="submitBtn">Submit</button>
+    <h2>Name or ID</h2>
 
-    <!-- Section where selected Pokemon info will appear -->
-    <div id="pokemonDisplay"></div>
+    <input type="text" id="pokemonInput">
+    <button id="submitBtn">Find</button>
 
-    <!-- Move selection area (hidden until Pokemon loads) -->
+    <div id="pokemonDisplay">
+        <img id="pokemonImage" src="">
+        <br>
+        <audio id="pokemonAudio" controls></audio>
+    </div>
+
     <div id="moveSelection" style="display:none;">
-        <h3>Select 4 Moves</h3>
-        <select id="move1"></select>
-        <select id="move2"></select>
-        <select id="move3"></select>
-        <select id="move4"></select>
-        <br><br>
+        <div class="move-grid">
+            <select id="move1"></select>
+            <select id="move2"></select>
+            <select id="move3"></select>
+            <select id="move4"></select>
+        </div>
         <button id="addToTeam">Add to Team</button>
     </div>
 
-    <!-- Section where the team will be displayed -->
-    <h2>Your Team</h2>
     <div id="team"></div>
+
+</div>
 
 <script>
 
-// Object used to store already fetched Pokemon (caching)
+// Store fetched Pokemon data
 const cache = {};
-
-// Stores currently displayed Pokemon
+// Stores current pokemon being displayed
 let currentPokemon = null;
 
-// Event listeners for buttons
+// Event Listeners
 document.getElementById("submitBtn").addEventListener("click", fetchPokemon);
 document.getElementById("addToTeam").addEventListener("click", addToTeam);
 
-// Fetch Pokemon data from API
+// Fetch Pokemon data from PokeAPI
 function fetchPokemon() {
 
-    // Get user input and convert to lowercase
     const input = document.getElementById("pokemonInput").value.toLowerCase();
+    if (!input) return;
 
-    if (!input) return; // Stop if input is empty
-
-    // If Pokemon is already in cache, use stored data
     if (cache[input]) {
         displayPokemon(cache[input]);
         return;
     }
 
-    // Fetch data from PokeAPI
     fetch(`https://pokeapi.co/api/v2/pokemon/${input}`)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-            cache[input] = data; // Save response to cache
-            displayPokemon(data); // Show Pokemon on page
+            cache[input] = data;
+            displayPokemon(data);
         })
-        .catch(error => {
-            alert("Pokemon not found!");
-        });
+        .catch(() => alert("Pokemon not found"));
 }
 
-// Display Pokemon image, audio, and moves
+// Display Pokemon data on the page
 function displayPokemon(data) {
 
-    currentPokemon = data; // Save current Pokemon
+    currentPokemon = data;
 
-    const display = document.getElementById("pokemonDisplay");
-    display.innerHTML = ""; // Clear previous results
+    // Image (pixel sprite)
+    document.getElementById("pokemonImage").src =
+        data.sprites.front_default;
 
-    // Create and show Pokemon image
-    const img = document.createElement("img");
-    img.src = data.sprites.front_default;
-    display.appendChild(img);
-
-    // Create and show Pokemon cry audio
+    // Audio
     if (data.cries && data.cries.latest) {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.src = data.cries.latest;
-        display.appendChild(audio);
+        document.getElementById("pokemonAudio").src =
+            data.cries.latest;
     }
 
-    // Get list of moves
-    const moves = data.moves;
+    // Moves
+    const moves = data.moves.slice(0, 20);
 
-    // Load moves into 4 dropdown menus
+    // 4 dropdowns for moves
     for (let i = 1; i <= 4; i++) {
-
         const dropdown = document.getElementById(`move${i}`);
-        dropdown.innerHTML = ""; // Clear old moves
+        dropdown.innerHTML = "";
 
-        // Add first 20 moves to dropdown
-        moves.slice(0, 20).forEach(move => {
+        moves.forEach(move => {
             const option = document.createElement("option");
             option.value = move.move.name;
             option.textContent = move.move.name;
@@ -107,34 +174,23 @@ function displayPokemon(data) {
         });
     }
 
-    // Show move selection area
     document.getElementById("moveSelection").style.display = "block";
 }
 
-// Add selected Pokemon and moves to the team section
+// Add the current Pokemon and selected moves to the team display
 function addToTeam() {
 
-    if (!currentPokemon) return; // Stop if no Pokemon selected
+    if (!currentPokemon) return;
 
-    const teamDiv = document.getElementById("team");
+    const team = document.getElementById("team");
 
-    // Create a card container
+    // Create a card for the Pokemon
     const card = document.createElement("div");
-    card.style.border = "1px solid black";
-    card.style.margin = "10px";
-    card.style.padding = "10px";
+    card.className = "team-card";
 
-    // Add Pokemon name
-    const title = document.createElement("h3");
-    title.textContent = currentPokemon.name;
-    card.appendChild(title);
-
-    // Add Pokemon image
     const img = document.createElement("img");
     img.src = currentPokemon.sprites.front_default;
-    card.appendChild(img);
 
-    // Create list of selected moves
     const moveList = document.createElement("ul");
 
     for (let i = 1; i <= 4; i++) {
@@ -143,10 +199,10 @@ function addToTeam() {
         moveList.appendChild(li);
     }
 
+    card.appendChild(img);
     card.appendChild(moveList);
 
-    // Add card to team section
-    teamDiv.appendChild(card);
+    team.appendChild(card);
 }
 
 </script>
