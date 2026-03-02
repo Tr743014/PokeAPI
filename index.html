@@ -5,13 +5,17 @@
 </head>
 <body>
 
+    <!-- Page title -->
     <h1>Pokemon Team Builder</h1>
 
+    <!-- Input field for Pokemon name or ID -->
     <input type="text" id="pokemonInput" placeholder="Enter Pokemon name or ID">
     <button id="submitBtn">Submit</button>
 
+    <!-- Section where selected Pokemon info will appear -->
     <div id="pokemonDisplay"></div>
 
+    <!-- Move selection area (hidden until Pokemon loads) -->
     <div id="moveSelection" style="display:none;">
         <h3>Select 4 Moves</h3>
         <select id="move1"></select>
@@ -22,50 +26,62 @@
         <button id="addToTeam">Add to Team</button>
     </div>
 
+    <!-- Section where the team will be displayed -->
     <h2>Your Team</h2>
     <div id="team"></div>
 
 <script>
 
-const cache = {}; // simple caching object
+// Object used to store already fetched Pokemon (caching)
+const cache = {};
+
+// Stores currently displayed Pokemon
 let currentPokemon = null;
 
+// Event listeners for buttons
 document.getElementById("submitBtn").addEventListener("click", fetchPokemon);
 document.getElementById("addToTeam").addEventListener("click", addToTeam);
 
+// Fetch Pokemon data from API
 function fetchPokemon() {
+
+    // Get user input and convert to lowercase
     const input = document.getElementById("pokemonInput").value.toLowerCase();
 
-    if (!input) return;
+    if (!input) return; // Stop if input is empty
 
+    // If Pokemon is already in cache, use stored data
     if (cache[input]) {
         displayPokemon(cache[input]);
         return;
     }
 
+    // Fetch data from PokeAPI
     fetch(`https://pokeapi.co/api/v2/pokemon/${input}`)
         .then(response => response.json())
         .then(data => {
-            cache[input] = data; // store in cache
-            displayPokemon(data);
+            cache[input] = data; // Save response to cache
+            displayPokemon(data); // Show Pokemon on page
         })
         .catch(error => {
             alert("Pokemon not found!");
         });
 }
 
+// Display Pokemon image, audio, and moves
 function displayPokemon(data) {
-    currentPokemon = data;
+
+    currentPokemon = data; // Save current Pokemon
 
     const display = document.getElementById("pokemonDisplay");
-    display.innerHTML = "";
+    display.innerHTML = ""; // Clear previous results
 
-    // Image
+    // Create and show Pokemon image
     const img = document.createElement("img");
     img.src = data.sprites.front_default;
     display.appendChild(img);
 
-    // Audio
+    // Create and show Pokemon cry audio
     if (data.cries && data.cries.latest) {
         const audio = document.createElement("audio");
         audio.controls = true;
@@ -73,13 +89,16 @@ function displayPokemon(data) {
         display.appendChild(audio);
     }
 
-    // Load moves into dropdowns
+    // Get list of moves
     const moves = data.moves;
 
+    // Load moves into 4 dropdown menus
     for (let i = 1; i <= 4; i++) {
-        const dropdown = document.getElementById(`move${i}`);
-        dropdown.innerHTML = "";
 
+        const dropdown = document.getElementById(`move${i}`);
+        dropdown.innerHTML = ""; // Clear old moves
+
+        // Add first 20 moves to dropdown
         moves.slice(0, 20).forEach(move => {
             const option = document.createElement("option");
             option.value = move.move.name;
@@ -88,27 +107,34 @@ function displayPokemon(data) {
         });
     }
 
+    // Show move selection area
     document.getElementById("moveSelection").style.display = "block";
 }
 
+// Add selected Pokemon and moves to the team section
 function addToTeam() {
-    if (!currentPokemon) return;
+
+    if (!currentPokemon) return; // Stop if no Pokemon selected
 
     const teamDiv = document.getElementById("team");
 
+    // Create a card container
     const card = document.createElement("div");
     card.style.border = "1px solid black";
     card.style.margin = "10px";
     card.style.padding = "10px";
 
+    // Add Pokemon name
     const title = document.createElement("h3");
     title.textContent = currentPokemon.name;
     card.appendChild(title);
 
+    // Add Pokemon image
     const img = document.createElement("img");
     img.src = currentPokemon.sprites.front_default;
     card.appendChild(img);
 
+    // Create list of selected moves
     const moveList = document.createElement("ul");
 
     for (let i = 1; i <= 4; i++) {
@@ -119,6 +145,7 @@ function addToTeam() {
 
     card.appendChild(moveList);
 
+    // Add card to team section
     teamDiv.appendChild(card);
 }
 
