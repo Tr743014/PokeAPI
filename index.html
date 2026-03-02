@@ -21,11 +21,6 @@
             text-align: center;
         }
 
-        /* Elements */
-        h1 {
-            margin-bottom: 10px;
-        }
-
         /* Input and Button */
         input {
             width: 250px;
@@ -37,16 +32,21 @@
             margin-top: 10px;
         }
 
-        /* Pokemon Display */
-        #pokemonImage {
-            width: 250px;
-            margin: 20px 0;
-        .pokemonScrambled {
-            width: 10px;
-            }
+        /* Pokemon Pixel Display */
+     #pokemonImage {
+    margin: 20px 0;
+    image-rendering: pixelated;
         }
-    
 
+    /* Small size for placeholder */
+    .pokemonScrambled {
+             width: 100px;
+        }
+
+    /* Normal size when real pokemon loads */
+    .pokemon {
+         width: 250px;
+        }
 
         #moveSelection {
             margin-top: 20px;
@@ -78,14 +78,13 @@
         }
 
         .team-card img {
-            width: 100px;
+            width: 250px;
         }
 
         .team-card ul {
             text-align: left;
         }
 
-        
 
     </style>
 </head>
@@ -155,8 +154,15 @@ function displayPokemon(data) {
     currentPokemon = data;
 
     // Image (pixel sprite)
-    document.getElementById("pokemonImage").src =
-        data.sprites.front_default;
+  const img = document.getElementById("pokemonImage");
+
+img.src = data.sprites.front_default;
+
+// remove small placeholder class
+img.classList.remove("pokemonScrambled");
+
+// add normal size class
+img.classList.add("pokemon");
 
     // Audio
     if (data.cries && data.cries.latest) {
